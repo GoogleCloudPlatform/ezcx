@@ -69,8 +69,8 @@ import (
 )
 
 func main() {
-	parent := context.Background()
-	lg := log.Default()
+    parent := context.Background()
+    lg := log.Default()
 
     server := ezcx.NewServer(parent, ":8082", lg)
     // HandleCx adapts ezcx.HandlerFunc into an http.Handler for you!
