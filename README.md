@@ -72,10 +72,10 @@ func main() {
 	parent := context.Background()
 	lg := log.Default()
 
-	server := ezcx.NewServer(parent, ":8082", lg)
+    server := ezcx.NewServer(parent, ":8082", lg)
     // HandleCx adapts ezcx.HandlerFunc into an http.Handler for you!
     server.HandleCx("/from-dfcx", CxHandler)
-	server.ListenAndServe(parent)
+    server.ListenAndServe(parent)
 }
 ```
 
