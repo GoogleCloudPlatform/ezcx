@@ -23,7 +23,7 @@ func TestHussainsHedgeTrimmer(t *testing.T) {
 	}
 	var res ezcx.WebhookResponse
 	err = cxHedgeTrimmer(*res, req)
-	if er != nil {
+	if err != nil {
 		t.Log(err)
 	}
 	res.Write(os.Stdout)
