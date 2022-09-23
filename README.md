@@ -104,3 +104,6 @@ func CxHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 	return nil
 }
 ```
+
+# Examples
+Please visit the examples folder to check out how ezcx stacks up!  
