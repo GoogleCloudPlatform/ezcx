@@ -64,6 +64,5 @@ var sample = `{
 	"tag": "nb-cohorts"
 },
 "text": "65+",
-"languageCode": "en",
-"callerId": "+17862512635"
+"languageCode": "en"
 }`

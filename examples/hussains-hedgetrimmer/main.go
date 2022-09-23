@@ -38,5 +38,6 @@ func cxHedgeTrimmer(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 		params[key] = trimmer.Replace(strVal)
 	}
 
+	res.AddSessionParameters(params)
 	return nil
 }

@@ -46,6 +46,10 @@ func NewTestWebhookRequest(session, payload map[string]any) (*WebhookRequest, er
 	for key, val := range session {
 		params[key] = val
 	}
+	err = req.addSessionParameters(params)
+	if err != nil {
+		return nil, err
+	}
 
 	pay, err := req.GetPayload()
 	if err != nil {
@@ -54,8 +58,37 @@ func NewTestWebhookRequest(session, payload map[string]any) (*WebhookRequest, er
 	for key, val := range payload {
 		pay[key] = val
 	}
+	err = req.addPayload(pay)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
+}
+
+func (req *WebhookRequest) addSessionParameters(params map[string]any) error {
+	for key, val := range params {
+		protoVal, err := structpb.NewValue(val)
+		if err != nil {
+			return err
+		}
+		req.SessionInfo.Parameters[key] = protoVal
+	}
+	return nil
+}
+
+func (req *WebhookRequest) addPayload(data map[string]any) error {
+	if req.Payload.Fields == nil {
+		req.Payload.Fields = make(map[string]*structpb.Value)
+	}
+	for key, val := range data {
+		protoVal, err := structpb.NewValue(val)
+		if err != nil {
+			return err
+		}
+		req.Payload.Fields[key] = protoVal
+	}
+	return nil
 }
 
 func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
