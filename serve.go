@@ -12,12 +12,7 @@ import (
 )
 
 var (
-	ServerDefaultSignals []syscall.Signal = []syscall.Signal{
-		syscall.SIGINT,
-		syscall.SIGTERM,
-		syscall.SIGHUP,
-	}
-	ServerDefaultOsSignals []os.Signal = []os.Signal{
+	ServerDefaultSignals []os.Signal = []os.Signal{
 		syscall.SIGINT,
 		syscall.SIGTERM,
 		syscall.SIGHUP,
@@ -62,6 +57,9 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res.WriteResponse(w)
 }
 
+// The HandlerFactory is a pattern for dependency injection.
+type HandlerFactory func(context.Context, any) HandlerFunc
+
 type Server struct {
 	signals []os.Signal
 	signal  chan os.Signal
@@ -75,9 +73,19 @@ func NewServer(ctx context.Context, addr string, lg *log.Logger, signals ...os.S
 	return new(Server).Init(ctx, addr, lg, signals...)
 }
 
+// os.Signal, syscall.Signal do not implement comparable...?
+func contains[T comparable](s []T, e T) bool {
+	for i := range s {
+		if s[i] == e {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Server) Init(ctx context.Context, addr string, lg *log.Logger, signals ...os.Signal) *Server {
 	if len(signals) == 0 {
-		s.signals = ServerDefaultOsSignals
+		s.signals = ServerDefaultSignals
 	} else {
 		// rethink this later on.  We need to make sure there at least
 		// the right group of signals!

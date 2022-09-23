@@ -84,6 +84,16 @@ func (req *WebhookRequest) GetSessionParameters() (map[string]any, error) {
 	return params, nil
 }
 
+func (req *WebhookRequest) GetSessionParameter(key string) (any, bool) {
+	// Check if SessionInfo Parameters is nil.  	
+	if req.SessionInfo.Parameters == nil {
+		return nil, false
+	}
+
+	protoVal, ok := req.SessionInfo.Parameters[key]
+	return protoVal.AsInterface(), ok
+}
+
 func (req *WebhookRequest) GetPayload() (map[string]any, error) {
 	params := make(map[string]any)
 
@@ -100,4 +110,18 @@ func (req *WebhookRequest) GetPayload() (map[string]any, error) {
 	}
 
 	return params, nil
+}
+
+func (req *WebhookRequest) GetPayloadParameter(key string) (any, bool) {
+	// Just in case - I don't think we can iterate over a nil map.
+
+	if req.Payload == nil {
+		return nil, false
+	}
+	if req.Payload.Fields == nil {
+		return nil, false
+	}
+
+	protoVal, ok := req.Payload.Fields[key]
+	return protoVal.AsInterface(), ok
 }
