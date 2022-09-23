@@ -3,6 +3,7 @@ module github.com/yaq-cc/ezcx
 go 1.18
 
 require (
+	github.com/google/uuid v1.1.2
 	google.golang.org/genproto v0.0.0-20220909194730-69f6226f97e5
 	google.golang.org/protobuf v1.28.1
 )

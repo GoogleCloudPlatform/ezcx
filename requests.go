@@ -4,8 +4,10 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/google/uuid"
 	cx "google.golang.org/genproto/googleapis/cloud/dialogflow/cx/v3"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type WebhookRequest struct {
@@ -14,6 +16,46 @@ type WebhookRequest struct {
 
 func NewWebhookRequest() *WebhookRequest {
 	return new(WebhookRequest)
+}
+
+func NewEmptyWebhookRequest() *WebhookRequest {
+	return new(WebhookRequest).emptyInit()
+}
+
+func (req *WebhookRequest) emptyInit() *WebhookRequest {
+	// Allocate SessionInfo
+	req.SessionInfo = new(cx.SessionInfo)
+	req.SessionInfo.Parameters = make(map[string]*structpb.Value)
+
+	// Allocate the Payload
+	req.Payload = new(structpb.Struct)
+	req.Payload.Fields = make(map[string]*structpb.Value)
+
+	return req
+
+}
+
+func NewTestWebhookRequest(session, payload map[string]any) (*WebhookRequest, error) {
+	req := NewEmptyWebhookRequest()
+	req.SessionInfo.Session = uuid.New().String()
+
+	params, err := req.GetSessionParameters()
+	if err != nil {
+		return nil, err
+	}
+	for key, val := range session {
+		params[key] = val
+	}
+
+	pay, err := req.GetPayload()
+	if err != nil {
+		return nil, err
+	}
+	for key, val := range payload {
+		pay[key] = val
+	}
+
+	return req, nil
 }
 
 func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
@@ -29,7 +71,7 @@ func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 	return &req, nil
 }
 
-func  WebhookRequestFromRequest(r *http.Request) (*WebhookRequest, error) {
+func WebhookRequestFromRequest(r *http.Request) (*WebhookRequest, error) {
 	return WebhookRequestFromReader(r.Body)
 }
 
@@ -85,7 +127,7 @@ func (req *WebhookRequest) GetSessionParameters() (map[string]any, error) {
 }
 
 func (req *WebhookRequest) GetSessionParameter(key string) (any, bool) {
-	// Check if SessionInfo Parameters is nil.  	
+	// Check if SessionInfo Parameters is nil.
 	if req.SessionInfo.Parameters == nil {
 		return nil, false
 	}
