@@ -1,5 +1,5 @@
 # ezcx
-`ezcx` is a framework for building Dialogflow CX webhook fulfillment APIs.  
+`ezcx` is a framework for building containerized Dialogflow CX webhook fulfillment APIs.  `ezcx` runs happiest on Google's Cloud Run service.  
 
 `ezcx` was designed to remove most (if not all) the complexity associated with building Dialogflow CX webhook fulfillment APIs:
 
@@ -107,3 +107,61 @@ func CxHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 
 # Examples
 Please visit the examples folder to check out how ezcx stacks up!  
+
+# Dockerfile
+Provided for convenience.  
+
+```dockerfile
+FROM    golang:1.18-buster as builder
+WORKDIR /app
+COPY    . ./
+RUN     go build -o service
+
+FROM    debian:buster-slim
+RUN     set -x && \
+		apt-get update && \
+		DEBIAN_FRONTEND=noninteractive apt-get install -y \
+			ca-certificates && \
+			rm -rf /var/lib/apt/lists/*
+COPY    --from=builder /app/service /app/service
+
+CMD     ["/app/service"]
+```
+
+# Cloud Build
+Provided for convenience.  Review all the parameters for deploying to Cloud Run before issuing a gcloud builds submit!
+
+```yaml
+steps:
+- id: docker-build-push-ezcx-service
+  waitFor: ['-']
+  name: gcr.io/cloud-builders/docker
+  dir: service
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      docker build -t gcr.io/$PROJECT_ID/${_SERVICE} . &&
+      docker push gcr.io/$PROJECT_ID/${_SERVICE}
+
+- id: gcloud-run-deploy-ezcx-service
+  waitFor: ['docker-build-push-ezcx-service']
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      gcloud run deploy ${_SERVICE} \
+        --project $PROJECT_ID \
+        --image gcr.io/$PROJECT_ID/${_SERVICE} \
+        --timeout 5m \
+        --region ${_REGION} \
+        --no-cpu-throttling \
+        --min-instances 0 \
+        --max-instances 3 \
+        --allow-unauthenticated
+
+substitutions:
+  _SERVICE: ezcx-service
+  _REGION: us-central-1
+```
