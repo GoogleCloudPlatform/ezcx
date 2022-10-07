@@ -8,15 +8,15 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/yaq-cc/ezcx"
 )
 
 var (
-	PORT = *flag.String("PORT", "8080", "container port to listen to - default is 8080")
+	PORT = os.Getenv("PORT")
 )
 
 func main() {
@@ -42,4 +42,5 @@ func cxConfirm(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 	res.AddSessionParameters(params)
 	return nil
 }
+
 ```

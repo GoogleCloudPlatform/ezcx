@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	PORT = *flag.String("PORT", "8080", "container port to listen to - default is 8080")
+	PORT = os.Getenv("PORT")
 )
 
 func main() {
