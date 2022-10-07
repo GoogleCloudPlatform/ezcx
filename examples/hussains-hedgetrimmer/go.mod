@@ -2,7 +2,7 @@ module github.com/yaq-cc/ezcx/examples/hussains-hedgetrimmer
 
 go 1.18
 
-require github.com/yaq-cc/ezcx v0.0.0-20220923201736-c1b734abb4f6
+require github.com/yaq-cc/ezcx v0.0.0-20220923203713-252b70c4736d
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect

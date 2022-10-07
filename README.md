@@ -105,6 +105,28 @@ func CxHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 }
 ```
 
+# Basic Usage
+
+## Request-scoped Web Service Calls.
+`ezcx`'s WebhookRequest flows down `http.Request`'s context; this context is accessible via the WebhookRequest's Context() method. Under the hood, WebhookRequests.Context() method is just a pass-through for (*http.Request).Context().  
+
+```go
+func CxHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
+  ...
+  ctx := req.Context() 
+  apiResult, err := makeWebServiceCall(ctx, ...callOpts)
+  if err != nil {
+    return err
+  }
+  ...
+	return nil
+}
+```
+
+## Testing
+More on testing coming soon!
+
+
 # Examples
 Please visit the examples folder to check out how ezcx stacks up!  
 
@@ -165,3 +187,12 @@ substitutions:
   _SERVICE: ezcx-service
   _REGION: us-central-1
 ```
+
+# Backlog
+## Testing
+## EmptyWebhookRequest 
+Review the initialization of emptyWebhookRequest which is used for testing webhooks. I need to add a place for "pageInfo" which is an object that's rarely used. Details on pageInfo here: https://pkg.go.dev/google.golang.org/genproto/googleapis/cloud/dialogflow/cx/v3#PageInfo
+
+# Updates
+- 2022-10-07: WebhookRequest now has a method that returns the http.Request's context.  Adding in a Context() method was the simplest and most effective way of providing a request-scoped context to downstream web service calls.
+ 

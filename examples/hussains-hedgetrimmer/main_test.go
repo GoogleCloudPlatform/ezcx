@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"testing"
 
 	"github.com/yaq-cc/ezcx"
@@ -21,10 +22,11 @@ func TestHussainsHedgeTrimmer(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(req)
-	var res ezcx.WebhookResponse
-	err = cxHedgeTrimmer(&res, req)
+	res := req.PrepareResponse()
+	err = cxHedgeTrimmer(res, req)
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(res)
+	res.Write(os.Stdout)
 }

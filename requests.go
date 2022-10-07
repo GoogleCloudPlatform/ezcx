@@ -1,6 +1,7 @@
 package ezcx
 
 import (
+	"context"
 	"io"
 	"net/http"
 
@@ -12,6 +13,9 @@ import (
 
 type WebhookRequest struct {
 	cx.WebhookRequest
+	// 2022-10-07: A field for the http.Request context has been added to simplify
+	// and re-use the original HTTP requests context in down stream web service calls.
+	ctx context.Context
 }
 
 func NewWebhookRequest() *WebhookRequest {
@@ -22,6 +26,7 @@ func NewEmptyWebhookRequest() *WebhookRequest {
 	return new(WebhookRequest).emptyInit()
 }
 
+// yaquino@2022-10-07: Need to update this 
 func (req *WebhookRequest) emptyInit() *WebhookRequest {
 	// Allocate SessionInfo
 	req.SessionInfo = new(cx.SessionInfo)
@@ -104,8 +109,15 @@ func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 	return &req, nil
 }
 
+// yaquino@2022-10-07: Refactored to flow http.Request's context to the
+// WebhookRequest instance.  
 func WebhookRequestFromRequest(r *http.Request) (*WebhookRequest, error) {
-	return WebhookRequestFromReader(r.Body)
+	req, err := WebhookRequestFromReader(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	req.ctx = r.Context()
+	return req, nil
 }
 
 func (req *WebhookRequest) ReadReader(rd io.Reader) error {
@@ -199,4 +211,8 @@ func (req *WebhookRequest) GetPayloadParameter(key string) (any, bool) {
 
 	protoVal, ok := req.Payload.Fields[key]
 	return protoVal.AsInterface(), ok
+}
+
+func (req *WebhookRequest) Context() context.Context {
+	return req.ctx
 }

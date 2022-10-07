@@ -41,6 +41,8 @@ func (h HandlerFunc) Handle(res *WebhookResponse, req *WebhookRequest) error {
 	return h(res, req)
 }
 
+// yaquino@2022-10-07: http.Request's context is flowd down to the WebhookRequest
+// via WebhookRequestFromRequest (requests.go)
 func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	req, err := WebhookRequestFromRequest(r)

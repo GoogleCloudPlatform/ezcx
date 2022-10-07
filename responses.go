@@ -34,6 +34,11 @@ func NewWebhookResponse() *WebhookResponse {
 }
 
 func (res *WebhookResponse) AddSessionParameters(params map[string]any) error {
+	
+	// Just in case.. - might be more relevant during testing.
+	if res.SessionInfo.Parameters == nil {
+		res.SessionInfo.Parameters = make(map[string]*structpb.Value)
+	}
 	for key, val := range params {
 		protoVal, err := structpb.NewValue(val)
 		if err != nil {
