@@ -23,21 +23,6 @@ import (
 	"testing"
 )
 
-// func TestServer(t *testing.T) {
-// 	parent := context.Background()
-// 	lg := log.Default()
-
-// 	server := NewServer(parent, ":8082", lg, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-// 	mux, err := server.ServeMux()
-// 	if err != nil {
-// 		t.Log(err)
-// 	}
-// 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-// 		fmt.Fprintln(w, "Hello World!")
-// 	})
-// 	server.ListenAndServe(parent)
-// }
-
 func TestCxHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(sample))
 	w := httptest.NewRecorder()
@@ -49,7 +34,36 @@ func TestCxHandler(t *testing.T) {
 
 }
 
+func TestCxHandlerWithWebhookRequestTester(t *testing.T) {
+	params := make(map[string]any)
+	params["session-parameter-string"] = "My first session parameter"
+	params["session-parameter-integer"] = 42
+	params["session-parameter-bool"] = true
+	req, err := NewTestingWebhookRequest(nil, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := req.PrepareResponse()
+	err = CxHandler(res, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = res.WriteResponse(os.Stdout)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func CxHandler(res *WebhookResponse, req *WebhookRequest) error {
-	res.AddTextResponse("With much technolove from Yvan J. Aquino - I wrote this!")
+	params, err := req.GetSessionParameters()
+	if err != nil {
+		return err
+	}
+	_, ok := params["session-parameter-bool"]
+	if ok {
+		delete(params, "session-parameter-bool")
+	}
+	res.AddTextResponse("Hello from CxHandler!")
+	res.AddSessionParameters(params)
 	return nil
 }

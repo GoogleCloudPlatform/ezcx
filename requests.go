@@ -44,60 +44,77 @@ func NewEmptyWebhookRequest() *WebhookRequest {
 func (req *WebhookRequest) emptyInit() *WebhookRequest {
 	// Allocate SessionInfo
 	req.SessionInfo = new(cx.SessionInfo)
-	req.SessionInfo.Parameters = make(map[string]*structpb.Value)
+	req.SessionInfo.Session = uuid.New().String()
 
-	// Allocation PageInfo
-	req.PageInfo = new(cx.PageInfo)
-	req.PageInfo.FormInfo = new(cx.PageInfo_FormInfo)
-	req.PageInfo.FormInfo.ParameterInfo = make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
+	// // Allocation PageInfo
+	// req.PageInfo = new(cx.PageInfo)
+	// req.PageInfo.FormInfo = new(cx.PageInfo_FormInfo)
+	// req.PageInfo.FormInfo.ParameterInfo = make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
 
-	// Allocate the Payload
-	req.Payload = new(structpb.Struct)
-	req.Payload.Fields = make(map[string]*structpb.Value)
+	// // Allocate the Payload
+	// req.Payload = new(structpb.Struct)
+	// req.Payload.Fields = make(map[string]*structpb.Value)
 
 	return req
 
 }
 
 // yaquino@2022-10-08: Integrated pageInfo.
-func NewTestWebhookRequest(session, payload, pageForm map[string]any) (*WebhookRequest, error) {
+func NewTestingWebhookRequest(session, payload, pageform map[string]any) (*WebhookRequest, error) {
 	req := NewEmptyWebhookRequest()
-	req.SessionInfo.Session = uuid.New().String()
 
-	params, err := req.GetSessionParameters()
-	if err != nil {
-		return nil, err
-	}
-	for key, val := range session {
-		params[key] = val
-	}
-	err = req.addSessionParameters(params)
-	if err != nil {
-		return nil, err
-	}
-
-	pay, err := req.GetPayload()
-	if err != nil {
-		return nil, err
-	}
-	for key, val := range payload {
-		pay[key] = val
-	}
-	err = req.addPayload(pay)
-	if err != nil {
-		return nil, err
+	if session != nil {
+		// Field structure allocation
+		req.SessionInfo.Parameters = make(map[string]*structpb.Value)
+		// Adding parameters
+		params, err := req.GetSessionParameters()
+		if err != nil {
+			return nil, err
+		}
+		for key, val := range session {
+			params[key] = val
+		}
+		err = req.addSessionParameters(params)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	pageParams, err := req.GetPageFormParameters()
-	if err != nil {
-		return nil, err
+	if payload != nil {
+		// Field structure allocation
+		req.Payload = new(structpb.Struct)
+		req.Payload.Fields = make(map[string]*structpb.Value)
+		// Adding parameters
+		pay, err := req.GetPayload()
+		if err != nil {
+			return nil, err
+		}
+		for key, val := range payload {
+			pay[key] = val
+		}
+		err = req.addPayload(pay)
+		if err != nil {
+			return nil, err
+		}
 	}
-	for key, val := range pageForm {
-		pageParams[key] = val
-	}
-	err = req.addPageFormParameters(pageParams)
-	if err != nil {
-		return nil, err
+
+	if pageform != nil {
+		// Field structure allocation
+		req.PageInfo = new(cx.PageInfo)
+		req.PageInfo.FormInfo = new(cx.PageInfo_FormInfo)
+		req.PageInfo.FormInfo.ParameterInfo = make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
+		// Adding parameters
+		pageParams, err := req.GetPageFormParameters()
+		if err != nil {
+			return nil, err
+		}
+		for key, val := range pageform {
+			pageParams[key] = val
+		}
+		err = req.addPageFormParameters(pageParams)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return req, nil
 }

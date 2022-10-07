@@ -32,17 +32,17 @@ func NewWebhookResponse() *WebhookResponse {
 	res.FulfillmentResponse = new(cx.WebhookResponse_FulfillmentResponse)
 	res.FulfillmentResponse.Messages = make([]*cx.ResponseMessage, 0)
 
-	if res.SessionInfo == nil {
-		res.SessionInfo = new(cx.SessionInfo)
-	}
+	// if res.SessionInfo == nil {
+	// 	res.SessionInfo = new(cx.SessionInfo)
+	// }
 
-	if res.SessionInfo.Parameters == nil {
-		res.SessionInfo.Parameters = make(map[string]*structpb.Value)
-	}
+	// if res.SessionInfo.Parameters == nil {
+	// 	res.SessionInfo.Parameters = make(map[string]*structpb.Value)
+	// }
 
-	if res.Payload == nil {
-		res.Payload = new(structpb.Struct)
-	}
+	// if res.Payload == nil {
+	// 	res.Payload = new(structpb.Struct)
+	// }
 
 	return res
 }
@@ -86,6 +86,10 @@ func (res *WebhookResponse) AddOutputAudioTextResponse(ssml string) {
 }
 
 func (res *WebhookResponse) AddPayload(data map[string]any) error {
+	if res.Payload == nil {
+		res.Payload = new(structpb.Struct)
+	}
+	
 	if res.Payload.Fields == nil {
 		res.Payload.Fields = make(map[string]*structpb.Value)
 	}
