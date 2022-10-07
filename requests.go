@@ -119,6 +119,19 @@ func NewTestingWebhookRequest(session, payload, pageform map[string]any) (*Webho
 	return req, nil
 }
 
+func (req *WebhookRequest) TestCxHandler(out io.Writer, h HandlerFunc) (*WebhookResponse, error) {
+	res := req.PrepareResponse()
+	err := h(res, req)
+	if err != nil {
+		return nil, err
+	}
+	err = res.WriteResponse(out)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 func (req *WebhookRequest) addSessionParameters(params map[string]any) error {
 	for key, val := range params {
 		protoVal, err := structpb.NewValue(val)
@@ -208,10 +221,12 @@ func (req *WebhookRequest) PrepareResponse() *WebhookResponse {
 		resp.PageInfo = req.PageInfo
 	}
 
-	resp.SessionInfo.Session = req.SessionInfo.Session
-	if req.SessionInfo.Parameters != nil {
-		resp.SessionInfo.Parameters = req.SessionInfo.Parameters
-	}
+	resp.SessionInfo = req.SessionInfo
+
+	// resp.SessionInfo.Session = req.SessionInfo.Session
+	// if req.SessionInfo.Parameters != nil {
+	// 	resp.SessionInfo.Parameters = req.SessionInfo.Parameters
+	// }
 
 	if req.Payload != nil {
 		resp.Payload = req.Payload

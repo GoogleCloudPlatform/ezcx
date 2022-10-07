@@ -47,8 +47,26 @@ func NewWebhookResponse() *WebhookResponse {
 	return res
 }
 
+func (res *WebhookResponse) SetSessionParameters(params map[string]any) error {
+
+	// Just in case.. - might be more relevant during testing.
+	if res.SessionInfo.Parameters == nil {
+		res.SessionInfo.Parameters = make(map[string]*structpb.Value)
+	}
+	newParams := make(map[string]*structpb.Value)
+	for key, val := range params {
+		protoVal, err := structpb.NewValue(val)
+		if err != nil {
+			return err
+		}
+		newParams[key] = protoVal
+	}
+	res.SessionInfo.Parameters = newParams
+	return nil
+}
+
 func (res *WebhookResponse) AddSessionParameters(params map[string]any) error {
-	
+
 	// Just in case.. - might be more relevant during testing.
 	if res.SessionInfo.Parameters == nil {
 		res.SessionInfo.Parameters = make(map[string]*structpb.Value)
@@ -89,7 +107,7 @@ func (res *WebhookResponse) AddPayload(data map[string]any) error {
 	if res.Payload == nil {
 		res.Payload = new(structpb.Struct)
 	}
-	
+
 	if res.Payload.Fields == nil {
 		res.Payload.Fields = make(map[string]*structpb.Value)
 	}
