@@ -26,11 +26,16 @@ func NewEmptyWebhookRequest() *WebhookRequest {
 	return new(WebhookRequest).emptyInit()
 }
 
-// yaquino@2022-10-07: Need to update this 
+// yaquino@2022-10-08: Updated
 func (req *WebhookRequest) emptyInit() *WebhookRequest {
 	// Allocate SessionInfo
 	req.SessionInfo = new(cx.SessionInfo)
 	req.SessionInfo.Parameters = make(map[string]*structpb.Value)
+
+	// Allocation PageInfo
+	req.PageInfo = new(cx.PageInfo)
+	req.PageInfo.FormInfo = new(cx.PageInfo_FormInfo)
+	req.PageInfo.FormInfo.ParameterInfo = make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
 
 	// Allocate the Payload
 	req.Payload = new(structpb.Struct)
@@ -40,7 +45,8 @@ func (req *WebhookRequest) emptyInit() *WebhookRequest {
 
 }
 
-func NewTestWebhookRequest(session, payload map[string]any) (*WebhookRequest, error) {
+// yaquino@2022-10-08: Integrated pageInfo.
+func NewTestWebhookRequest(session, payload, pageForm map[string]any) (*WebhookRequest, error) {
 	req := NewEmptyWebhookRequest()
 	req.SessionInfo.Session = uuid.New().String()
 
@@ -68,6 +74,17 @@ func NewTestWebhookRequest(session, payload map[string]any) (*WebhookRequest, er
 		return nil, err
 	}
 
+	pageParams, err := req.GetPageFormParameters()
+	if err != nil {
+		return nil, err
+	}
+	for key, val := range pageForm {
+		pageParams[key] = val
+	}
+	err = req.addPageFormParameters(pageParams)
+	if err != nil {
+		return nil, err
+	}
 	return req, nil
 }
 
@@ -96,6 +113,22 @@ func (req *WebhookRequest) addPayload(data map[string]any) error {
 	return nil
 }
 
+// yaquino@2022-10-08: Complete this method!
+func (req *WebhookRequest) addPageFormParameters(data map[string]any) error {
+	for key, val := range data {
+		var formParameter cx.PageInfo_FormInfo_ParameterInfo
+		protoVal, err := structpb.NewValue(val)
+		if err != nil {
+			return err
+		}
+		formParameter.DisplayName = key
+		formParameter.Value = protoVal
+		formParameter.State = cx.PageInfo_FormInfo_ParameterInfo_FILLED
+		req.PageInfo.FormInfo.ParameterInfo = append(req.PageInfo.FormInfo.ParameterInfo, &formParameter)
+	}
+	return nil
+}
+
 func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 	var req WebhookRequest
 	b, err := io.ReadAll(rd)
@@ -110,7 +143,7 @@ func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 }
 
 // yaquino@2022-10-07: Refactored to flow http.Request's context to the
-// WebhookRequest instance.  
+// WebhookRequest instance.
 func WebhookRequestFromRequest(r *http.Request) (*WebhookRequest, error) {
 	req, err := WebhookRequestFromReader(r.Body)
 	if err != nil {
@@ -166,6 +199,21 @@ func (req *WebhookRequest) GetSessionParameters() (map[string]any, error) {
 
 	for key, protoVal := range req.SessionInfo.Parameters {
 		params[key] = protoVal.AsInterface()
+	}
+
+	return params, nil
+}
+
+func (req *WebhookRequest) GetPageFormParameters() (map[string]any, error) {
+	params := make(map[string]any)
+
+	// Just in case - I don't think we can iterate over a nil map.
+	if req.PageInfo.FormInfo.ParameterInfo == nil {
+		return params, nil
+	}
+
+	for _, paramInfo := range req.PageInfo.FormInfo.ParameterInfo {
+		params[paramInfo.DisplayName] = paramInfo.Value.AsInterface()
 	}
 
 	return params, nil
