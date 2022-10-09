@@ -43,7 +43,7 @@ func TestCxHandlerWithWebhookRequestTester(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	res := req.PrepareResponse()
+	res := req.initializeResponse()
 	err = CxHandler(res, req)
 	if err != nil {
 		t.Fatal(err)
@@ -55,10 +55,7 @@ func TestCxHandlerWithWebhookRequestTester(t *testing.T) {
 }
 
 func CxHandler(res *WebhookResponse, req *WebhookRequest) error {
-	params, err := req.GetSessionParameters()
-	if err != nil {
-		return err
-	}
+	params := req.GetSessionParameters()
 	_, ok := params["session-parameter-bool"]
 	if ok {
 		delete(params, "session-parameter-bool")

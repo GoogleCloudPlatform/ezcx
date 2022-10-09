@@ -37,12 +37,10 @@ func TestPrepareResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log("\n!!!SESSION PARAMS: ", whreq.SessionInfo.Parameters)
-	reqParams, err := whreq.GetSessionParameters()
-	if err != nil {
-		t.Fatal(err)
-	}
+	reqParams := whreq.GetSessionParameters()
+
 	t.Log("REQ PARAMS:", reqParams)
-	whresp := whreq.PrepareResponse()
+	whresp := whreq.InitializeResponse()
 	whresp.AddTextResponse("Hello", " World!")
 	params := make(map[string]any)
 	params["manually_added"] = "Hello from Yvan!"

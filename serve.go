@@ -39,11 +39,6 @@ type Handler interface {
 	Handle(res *WebhookResponse, req *WebhookRequest) error
 }
 
-// type AdaptHandler interface {
-// 	Handler
-// 	Adapt(func(*WebhookResponse, *WebhookRequest) error) Handler
-// }
-
 // Functional Adapter: HandlerFunc is an adapter.
 // HandlerFunc satisfies the Handler interface
 type HandlerFunc func(*WebhookResponse, *WebhookRequest) error
@@ -64,7 +59,8 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	res := req.PrepareResponse()
+	req.ctx = r.Context
+	res := req.InitializeResponse()
 	err = h.Handle(res, req)
 	if err != nil {
 		log.Println(err)
@@ -72,9 +68,6 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	res.WriteResponse(w)
 }
-
-// The HandlerFactory is a pattern for dependency injection.
-type HandlerFactory func(context.Context, any) HandlerFunc
 
 type Server struct {
 	signals []os.Signal
@@ -89,15 +82,6 @@ func NewServer(ctx context.Context, addr string, lg *log.Logger, signals ...os.S
 	return new(Server).Init(ctx, addr, lg, signals...)
 }
 
-// os.Signal, syscall.Signal do not implement comparable...?
-func contains[T comparable](s []T, e T) bool {
-	for i := range s {
-		if s[i] == e {
-			return true
-		}
-	}
-	return false
-}
 
 func (s *Server) Init(ctx context.Context, addr string, lg *log.Logger, signals ...os.Signal) *Server {
 	if len(signals) == 0 {
@@ -218,41 +202,3 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	}
 	return nil
 }
-
-// // This is probably too complicated.  Consider something based of excluslivey Handler.
-// type WebhookHandler struct {
-// 	Handler
-// }
-
-// func (h *WebhookHandler) Handle(*WebhookResponse, *WebhookRequest) error {
-// 	return nil
-// }
-
-// func (h *WebhookHandler) Adapt(f func(*WebhookResponse, *WebhookRequest) error) Handler {
-// 	h.Handler = HandlerFunc(f)
-// 	return h
-// }
-
-// func Adapt(h AdaptHandler) Handler {
-// 	return h.Adapt(h.Handle)
-// }
-
-// Custom Handler types just need to embed HandlerFunc. Struct methods
-// can be used to implement it. This works because HandlerFunc Implements
-// ServeHTTP
-// i.e.:
-// type CustomHandler struct {
-// 	HandlerFunc
-// 	State string
-// }
-
-// func (h *CustomHandler) Handle(res *WebhookResponse, req *WebhookRequest) error {
-//  your fancy code goes here :-p
-// 	return nil
-// }
-
-// func NewCustomHandler() *CustomHandler {
-// 	h := new(CustomHandler)
-// 	h.HandlerFunc = h.Handle //
-// 	h.State = "state"
-// }

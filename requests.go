@@ -27,149 +27,85 @@ import (
 
 type WebhookRequest struct {
 	cx.WebhookRequest
-	// 2022-10-07: A field for the http.Request context has been added to simplify
-	// and re-use the original HTTP requests context in down stream web service calls.
-	ctx context.Context
+	// 2022-10-08: Replaced context.Context with func () context.Context
+	ctx func() context.Context
 }
 
 func NewWebhookRequest() *WebhookRequest {
 	return new(WebhookRequest)
 }
 
-func NewEmptyWebhookRequest() *WebhookRequest {
-	return new(WebhookRequest).emptyInit()
-}
+// WebhookRequest Initializations
 
-// yaquino@2022-10-08: Updated
-func (req *WebhookRequest) emptyInit() *WebhookRequest {
-	// Allocate SessionInfo
-	req.SessionInfo = new(cx.SessionInfo)
-	req.SessionInfo.Session = uuid.New().String()
-
-	// // Allocation PageInfo
-	// req.PageInfo = new(cx.PageInfo)
-	// req.PageInfo.FormInfo = new(cx.PageInfo_FormInfo)
-	// req.PageInfo.FormInfo.ParameterInfo = make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
-
-	// // Allocate the Payload
-	// req.Payload = new(structpb.Struct)
-	// req.Payload.Fields = make(map[string]*structpb.Value)
-
-	return req
-
-}
-
-// yaquino@2022-10-08: Integrated pageInfo.
-func NewTestingWebhookRequest(session, payload, pageform map[string]any) (*WebhookRequest, error) {
-	req := NewEmptyWebhookRequest()
-
-	if session != nil {
-		// Field structure allocation
-		req.SessionInfo.Parameters = make(map[string]*structpb.Value)
-		// Adding parameters
-		params, err := req.GetSessionParameters()
-		if err != nil {
-			return nil, err
-		}
-		for key, val := range session {
-			params[key] = val
-		}
-		err = req.addSessionParameters(params)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if payload != nil {
-		// Field structure allocation
-		req.Payload = new(structpb.Struct)
-		req.Payload.Fields = make(map[string]*structpb.Value)
-		// Adding parameters
-		pay, err := req.GetPayload()
-		if err != nil {
-			return nil, err
-		}
-		for key, val := range payload {
-			pay[key] = val
-		}
-		err = req.addPayload(pay)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if pageform != nil {
-		// Field structure allocation
+// Initialize the PageInfo field
+func (req *WebhookRequest) initPageInfo() {
+	if req.PageInfo == nil {
 		req.PageInfo = new(cx.PageInfo)
+	}
+	if req.PageInfo.FormInfo == nil {
 		req.PageInfo.FormInfo = new(cx.PageInfo_FormInfo)
+	}
+	if req.PageInfo.FormInfo.ParameterInfo == nil {
 		req.PageInfo.FormInfo.ParameterInfo = make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
-		// Adding parameters
-		pageParams, err := req.GetPageFormParameters()
-		if err != nil {
-			return nil, err
-		}
-		for key, val := range pageform {
-			pageParams[key] = val
-		}
-		err = req.addPageFormParameters(pageParams)
-		if err != nil {
-			return nil, err
-		}
 	}
-	return req, nil
 }
 
-func (req *WebhookRequest) TestCxHandler(out io.Writer, h HandlerFunc) (*WebhookResponse, error) {
-	res := req.PrepareResponse()
-	err := h(res, req)
-	if err != nil {
-		return nil, err
+// Initialize the SessionInfo field
+func (req *WebhookRequest) initSessionInfo() {
+	if req.SessionInfo == nil {
+		req.SessionInfo = new(cx.SessionInfo)
 	}
-	err = res.WriteResponse(out)
-	if err != nil {
-		return nil, err
-	}
-	return res, nil
 }
 
-func (req *WebhookRequest) addSessionParameters(params map[string]any) error {
-	for key, val := range params {
-		protoVal, err := structpb.NewValue(val)
-		if err != nil {
-			return err
-		}
-		req.SessionInfo.Parameters[key] = protoVal
+// Initialize the Payload field
+func (req *WebhookRequest) initPayload() {
+	if req.Payload == nil {
+		req.Payload = new(structpb.Struct)
 	}
-	return nil
-}
-
-func (req *WebhookRequest) addPayload(data map[string]any) error {
 	if req.Payload.Fields == nil {
 		req.Payload.Fields = make(map[string]*structpb.Value)
 	}
-	for key, val := range data {
-		protoVal, err := structpb.NewValue(val)
+}
+
+func (req *WebhookRequest) Context() context.Context {
+	return req.ctx()
+}
+
+// Sets (overrides) the PageInfo.ParameterInfos to match the provided map m
+func (req *WebhookRequest) setPageFormParameters(m map[string]any) error {
+	params := make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
+	for k, v := range m {
+		var formParameter cx.PageInfo_FormInfo_ParameterInfo
+		pv, err := anyToProto(v)
 		if err != nil {
 			return err
 		}
-		req.Payload.Fields[key] = protoVal
+		formParameter.DisplayName = k
+		formParameter.Value = pv
+		formParameter.State = cx.PageInfo_FormInfo_ParameterInfo_FILLED
+		params = append(params, &formParameter)
 	}
+	req.PageInfo.FormInfo.ParameterInfo = params
 	return nil
 }
 
-// yaquino@2022-10-08: Complete this method!
-func (req *WebhookRequest) addPageFormParameters(data map[string]any) error {
-	for key, val := range data {
-		var formParameter cx.PageInfo_FormInfo_ParameterInfo
-		protoVal, err := structpb.NewValue(val)
-		if err != nil {
-			return err
-		}
-		formParameter.DisplayName = key
-		formParameter.Value = protoVal
-		formParameter.State = cx.PageInfo_FormInfo_ParameterInfo_FILLED
-		req.PageInfo.FormInfo.ParameterInfo = append(req.PageInfo.FormInfo.ParameterInfo, &formParameter)
+// Sets (overrides) the SessionInfo.Parameters to match the provided map m
+func (req *WebhookRequest) setSessionParameters(m map[string]any) error {
+	pm, err := anyToProtoMap(m)
+	if err != nil {
+		return err
 	}
+	req.SessionInfo.Parameters = pm
+	return nil
+}
+
+// Sets (overrides the SessionInfo.Parameters) to match the provided map m
+func (req *WebhookRequest) setPayload(m map[string]any) error {
+	pm, err := anyToProtoMap(m)
+	if err != nil {
+		return err
+	}
+	req.Payload.Fields = pm
 	return nil
 }
 
@@ -193,7 +129,6 @@ func WebhookRequestFromRequest(r *http.Request) (*WebhookRequest, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.ctx = r.Context()
 	return req, nil
 }
 
@@ -213,84 +148,94 @@ func (req *WebhookRequest) ReadRequest(r *http.Request) error {
 	return req.ReadReader(r.Body)
 }
 
-func (req *WebhookRequest) PrepareResponse() *WebhookResponse {
+func (req *WebhookRequest) InitializeResponse() *WebhookResponse {
+	return req.initializeResponse()
+}
+
+func (req *WebhookRequest) initializeResponse() *WebhookResponse {
 	resp := NewWebhookResponse()
+	return req.copySession(resp)
+}
 
-	// Added 2022-09-19
+func (req *WebhookRequest) copySession(res *WebhookResponse) *WebhookResponse {
+	if res.SessionInfo == nil {
+		res.SessionInfo = new(cx.SessionInfo)
+	}
+	res.SessionInfo.Session = req.SessionInfo.Session
+	return res
+}
+
+func (req *WebhookRequest) CopyPageInfo(res *WebhookResponse) {
 	if req.PageInfo != nil {
-		resp.PageInfo = req.PageInfo
+		res.PageInfo = req.PageInfo
 	}
+}
 
-	resp.SessionInfo = req.SessionInfo
+func (req *WebhookRequest) CopySessionInfo(res *WebhookResponse) *WebhookResponse {
+	if req.SessionInfo != nil {
+		res.SessionInfo = req.SessionInfo
+	}
+	return res
+}
 
-	// resp.SessionInfo.Session = req.SessionInfo.Session
-	// if req.SessionInfo.Parameters != nil {
-	// 	resp.SessionInfo.Parameters = req.SessionInfo.Parameters
-	// }
-
+func (req *WebhookRequest) CopyPayload(res *WebhookResponse) *WebhookResponse {
 	if req.Payload != nil {
-		resp.Payload = req.Payload
+		res.Payload = req.Payload
 	}
-
-	return resp
+	return res
 }
 
-func (req *WebhookRequest) GetSessionParameters() (map[string]any, error) {
+func (req *WebhookRequest) GetPageFormParameters() map[string]any {
 	params := make(map[string]any)
 
 	// Just in case - I don't think we can iterate over a nil map.
-	if req.SessionInfo.Parameters == nil {
-		return params, nil
+	if req.PageInfo == nil {
+		return nil
 	}
-
-	for key, protoVal := range req.SessionInfo.Parameters {
-		params[key] = protoVal.AsInterface()
+	if req.PageInfo.FormInfo == nil {
+		return nil
 	}
-
-	return params, nil
-}
-
-func (req *WebhookRequest) GetPageFormParameters() (map[string]any, error) {
-	params := make(map[string]any)
-
-	// Just in case - I don't think we can iterate over a nil map.
 	if req.PageInfo.FormInfo.ParameterInfo == nil {
-		return params, nil
+		return nil
 	}
 
 	for _, paramInfo := range req.PageInfo.FormInfo.ParameterInfo {
-		params[paramInfo.DisplayName] = paramInfo.Value.AsInterface()
+		params[paramInfo.DisplayName] = protoToAny(paramInfo.Value)
 	}
 
-	return params, nil
+	return params
+}
+
+func (req *WebhookRequest) GetSessionParameters() map[string]any {
+	if req.SessionInfo == nil {
+		return nil
+	}
+	if req.SessionInfo.Parameters == nil {
+		return nil
+	}
+	return protoToAnyMap(req.SessionInfo.Parameters)
 }
 
 func (req *WebhookRequest) GetSessionParameter(key string) (any, bool) {
 	// Check if SessionInfo Parameters is nil.
+	if req.SessionInfo == nil {
+		return nil, false
+	}
 	if req.SessionInfo.Parameters == nil {
 		return nil, false
 	}
-
-	protoVal, ok := req.SessionInfo.Parameters[key]
-	return protoVal.AsInterface(), ok
+	pv, ok := req.SessionInfo.Parameters[key]
+	return protoToAny(pv), ok
 }
 
-func (req *WebhookRequest) GetPayload() (map[string]any, error) {
-	params := make(map[string]any)
-
-	// Just in case - I don't think we can iterate over a nil map.
+func (req *WebhookRequest) GetPayload() map[string]any {
 	if req.Payload == nil {
-		return params, nil
+		return nil
 	}
 	if req.Payload.Fields == nil {
-		return params, nil
+		return nil
 	}
-
-	for key, protoVal := range req.Payload.Fields {
-		params[key] = protoVal.AsInterface()
-	}
-
-	return params, nil
+	return protoToAnyMap(req.Payload.Fields)
 }
 
 func (req *WebhookRequest) GetPayloadParameter(key string) (any, bool) {
@@ -303,10 +248,64 @@ func (req *WebhookRequest) GetPayloadParameter(key string) (any, bool) {
 		return nil, false
 	}
 
-	protoVal, ok := req.Payload.Fields[key]
-	return protoVal.AsInterface(), ok
+	pv, ok := req.Payload.Fields[key]
+	return protoToAny(pv), ok
 }
 
-func (req *WebhookRequest) Context() context.Context {
-	return req.ctx
+// Testing
+func NewTestingWebhookRequest(session, payload, pageform map[string]any) (*WebhookRequest, error) {
+	return NewWebhookRequest().initTestingWebhookRequest(session, payload, pageform)
+}
+
+func (req *WebhookRequest) initTestingWebhookRequest(session, payload, pageform map[string]any) (*WebhookRequest, error) {
+	// Provided for testing, normally http.Request.Context is flowed down.
+	req.ctx = context.Background
+
+	// All incoming WebhookRequests should have a session.
+	req.initSessionInfo()
+	req.SessionInfo.Session = uuid.New().String()
+
+	// if session parameters are provided...
+	if session != nil {
+		err := req.setSessionParameters(session)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// if payload parameters are provided...
+	if payload != nil {
+		req.initPayload()
+		err := req.setPayload(payload)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// if pageForm parameters are provided...
+	if pageform != nil {
+		req.initPageInfo()
+		err := req.setPageFormParameters(pageform)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return req, nil
+}
+
+// yaquino: 2022-10-08Review this...!
+func (req *WebhookRequest) TestCxHandler(out io.Writer, h HandlerFunc) (*WebhookResponse, error) {
+	if req.ctx == nil {
+		req.ctx = context.Background
+	}
+	res := req.initializeResponse()
+	err := h(res, req)
+	if err != nil {
+		return nil, err
+	}
+	err = res.WriteResponse(out)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

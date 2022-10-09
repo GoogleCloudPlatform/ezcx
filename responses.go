@@ -29,59 +29,72 @@ type WebhookResponse struct {
 
 func NewWebhookResponse() *WebhookResponse {
 	res := new(WebhookResponse)
-	res.FulfillmentResponse = new(cx.WebhookResponse_FulfillmentResponse)
-	res.FulfillmentResponse.Messages = make([]*cx.ResponseMessage, 0)
-
-	// if res.SessionInfo == nil {
-	// 	res.SessionInfo = new(cx.SessionInfo)
-	// }
-
-	// if res.SessionInfo.Parameters == nil {
-	// 	res.SessionInfo.Parameters = make(map[string]*structpb.Value)
-	// }
-
-	// if res.Payload == nil {
-	// 	res.Payload = new(structpb.Struct)
-	// }
-
 	return res
 }
 
-func (res *WebhookResponse) SetSessionParameters(params map[string]any) error {
+func (res *WebhookResponse) initializeFulfillments() {
+	if res.FulfillmentResponse == nil {
+		res.FulfillmentResponse = new(cx.WebhookResponse_FulfillmentResponse)
+	}
+	if res.FulfillmentResponse.Messages == nil {
+		res.FulfillmentResponse.Messages = make([]*cx.ResponseMessage, 0)
+	}
+}
 
-	// Just in case.. - might be more relevant during testing.
+func (res *WebhookResponse) initializePageInfo() {
+	if res.PageInfo == nil {
+		res.PageInfo = new(cx.PageInfo)
+	}
+	if res.PageInfo.FormInfo == nil {
+		res.PageInfo.FormInfo = new(cx.PageInfo_FormInfo)
+	}
+	if res.PageInfo.FormInfo.ParameterInfo == nil {
+		res.PageInfo.FormInfo.ParameterInfo = make([]*cx.PageInfo_FormInfo_ParameterInfo, 0)
+	}
+}
+
+func (res *WebhookResponse) initializeSessionInfo() {
+	if res.SessionInfo == nil {
+		res.SessionInfo = new(cx.SessionInfo)
+	}
 	if res.SessionInfo.Parameters == nil {
 		res.SessionInfo.Parameters = make(map[string]*structpb.Value)
 	}
-	newParams := make(map[string]*structpb.Value)
-	for key, val := range params {
-		protoVal, err := structpb.NewValue(val)
-		if err != nil {
-			return err
-		}
-		newParams[key] = protoVal
+}
+
+func (res *WebhookResponse) initializePayload() {
+	if res.Payload == nil {
+		res.Payload = new(structpb.Struct)
 	}
-	res.SessionInfo.Parameters = newParams
+	if res.Payload.Fields == nil {
+		res.Payload.Fields = make(map[string]*structpb.Value)
+	}
+}
+
+func (res *WebhookResponse) SetSessionParameters(m map[string]any) error {
+	res.initializeSessionInfo()
+	pm, err := anyToProtoMap(m)
+	if err != nil {
+		return err
+	}
+	res.SessionInfo.Parameters = pm
 	return nil
 }
 
-func (res *WebhookResponse) AddSessionParameters(params map[string]any) error {
-
-	// Just in case.. - might be more relevant during testing.
-	if res.SessionInfo.Parameters == nil {
-		res.SessionInfo.Parameters = make(map[string]*structpb.Value)
-	}
-	for key, val := range params {
-		protoVal, err := structpb.NewValue(val)
+func (res *WebhookResponse) AddSessionParameters(m map[string]any) error {
+	res.initializeSessionInfo()
+	for k, v := range m {
+		pv, err := anyToProto(v)
 		if err != nil {
 			return err
 		}
-		res.SessionInfo.Parameters[key] = protoVal
+		res.SessionInfo.Parameters[k] = pv
 	}
 	return nil
 }
 
 func (res *WebhookResponse) AddTextResponse(txts ...string) {
+	res.initializeFulfillments()
 	respMessage := &cx.ResponseMessage{}
 	respMessage.Message = &cx.ResponseMessage_Text_{
 		Text: &cx.ResponseMessage_Text{
@@ -92,6 +105,7 @@ func (res *WebhookResponse) AddTextResponse(txts ...string) {
 }
 
 func (res *WebhookResponse) AddOutputAudioTextResponse(ssml string) {
+	res.initializeFulfillments()
 	respMessage := &cx.ResponseMessage{}
 	respMessage.Message = &cx.ResponseMessage_OutputAudioText_{
 		OutputAudioText: &cx.ResponseMessage_OutputAudioText{
@@ -103,26 +117,30 @@ func (res *WebhookResponse) AddOutputAudioTextResponse(ssml string) {
 	res.FulfillmentResponse.Messages = append(res.FulfillmentResponse.Messages, respMessage)
 }
 
-func (res *WebhookResponse) AddPayload(data map[string]any) error {
-	if res.Payload == nil {
-		res.Payload = new(structpb.Struct)
+func (res *WebhookResponse) SetPayload(m map[string]any) error {
+	res.initializePayload()
+	pm, err := anyToProtoMap(m)
+	if err != nil {
+		return err
 	}
+	res.Payload.Fields = pm
+	return nil
+}
 
-	if res.Payload.Fields == nil {
-		res.Payload.Fields = make(map[string]*structpb.Value)
-	}
-	for key, val := range data {
-		protoVal, err := structpb.NewValue(val)
+func (res *WebhookResponse) AddPayload(m map[string]any) error {
+	res.initializePayload()
+	for k, v := range m {
+		pv, err := anyToProto(v)
 		if err != nil {
 			return err
 		}
-		res.Payload.Fields[key] = protoVal
+		res.Payload.Fields[k] = pv
 	}
 	return nil
 }
 
 func (res *WebhookResponse) WriteResponse(w io.Writer) error {
-	m := protojson.MarshalOptions{Indent: "    "}
+	m := protojson.MarshalOptions{Indent: "\t"}
 	b, err := m.Marshal(res)
 	if err != nil {
 		return err
@@ -135,16 +153,18 @@ func (res *WebhookResponse) WriteResponse(w io.Writer) error {
 	return nil
 }
 
-func (res *WebhookResponse) Write(w io.Writer) error {
-	m := protojson.MarshalOptions{Indent: "    "}
-	b, err := m.Marshal(res)
-	if err != nil {
-		return err
-	}
-	r := bytes.NewReader(b)
-	_, err = io.Copy(w, r)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// // Deprecating this function as it gives the wrong impression.
+// // Write(p []byte) (int, error) is io.Writer interface.
+// func (res *WebhookResponse) Write(w io.Writer) error {
+// 	m := protojson.MarshalOptions{Indent: "    "}
+// 	b, err := m.Marshal(res)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	r := bytes.NewReader(b)
+// 	_, err = io.Copy(w, r)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
