@@ -39,10 +39,8 @@ func main() {
 }
 
 func cxConfirm(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
-	params, err := req.GetSessionParameters()
-	if err != nil {
-		return err
-	}
+	params := req.GetSessionParameters()
+
 	size := params["size"]
 	color := params["color"]
 	res.AddTextResponse(
