@@ -39,10 +39,7 @@ func cxHedgeTrimmer(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 
 	trimmer := strings.NewReplacer(".", "", ",", "", " ", "")
 
-	params, err := req.GetSessionParameters()
-	if err != nil {
-		return err
-	}
+	params := req.GetSessionParameters()
 
 	for key, val := range params {
 		strVal, ok := val.(string)

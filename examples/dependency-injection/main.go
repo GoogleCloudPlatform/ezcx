@@ -54,18 +54,19 @@ func NewDependencies() *Dependencies {
 
 // Structural approach.
 func (d *Dependencies) cxConfirm(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
-	params, err := req.GetSessionParameters()
-	if err != nil {
-		return err
-	}
+	params := req.GetSessionParameters()
+
 	size := params["size"]
 	color := params["color"]
+
 	res.AddTextResponse(
 		fmt.Sprintf("You can pick up your order for a %s %s shirt in 5 days.",
 			size, color),
 	)
+
 	params["cancel-period"] = "2"
 	res.AddSessionParameters(params)
+
 	return nil
 }
 

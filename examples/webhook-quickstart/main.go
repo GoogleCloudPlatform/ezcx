@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // ezcx/examples/webhook-quickstart is a refactoring of the Google Cloud provided
 // Go webhook quickstart: https://cloud.google.com/dialogflow/cx/docs/quick/webhook
 package main
@@ -43,6 +42,7 @@ func cxConfirm(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 
 	size := params["size"]
 	color := params["color"]
+
 	res.AddTextResponse(
 		fmt.Sprintf("You can pick up your order for a %s %s shirt in 5 days.",
 			size, color),
