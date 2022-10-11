@@ -149,6 +149,7 @@ func (req *WebhookRequest) ReadRequest(r *http.Request) error {
 	return req.ReadReader(r.Body)
 }
 
+// Is this the right format?
 func (req *WebhookRequest) WriteRequest(w io.Writer) error {
 	m := protojson.MarshalOptions{Indent: "\t"}
 	b, err := m.Marshal(req)
