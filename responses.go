@@ -152,19 +152,3 @@ func (res *WebhookResponse) WriteResponse(w io.Writer) error {
 	}
 	return nil
 }
-
-// // Deprecating this function as it gives the wrong impression.
-// // Write(p []byte) (int, error) is io.Writer interface.
-// func (res *WebhookResponse) Write(w io.Writer) error {
-// 	m := protojson.MarshalOptions{Indent: "    "}
-// 	b, err := m.Marshal(res)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	r := bytes.NewReader(b)
-// 	_, err = io.Copy(w, r)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }

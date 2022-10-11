@@ -122,7 +122,7 @@ func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 	unmarshaler := &protojson.UnmarshalOptions{
 		DiscardUnknown: true,
 	}
-	err = unmarshaler.Unmarshal(b, &req)
+	err = unmarshaler.Unmarshal(b, &req.WebhookRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,10 @@ func (req *WebhookRequest) ReadReader(rd io.Reader) error {
 	if err != nil {
 		return err
 	}
-	err = protojson.Unmarshal(b, req)
+	unmarshaler := &protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+	err = unmarshaler.Unmarshal(b, &req.WebhookRequest)
 	if err != nil {
 		return err
 	}
@@ -158,7 +161,7 @@ func (req *WebhookRequest) ReadRequest(r *http.Request) error {
 // Is this the right format??
 func (req *WebhookRequest) WriteRequest(w io.Writer) error {
 	m := protojson.MarshalOptions{Indent: "\t"}
-	b, err := m.Marshal(req)
+	b, err := m.Marshal(&req.WebhookRequest)
 	if err != nil {
 		return err
 	}
