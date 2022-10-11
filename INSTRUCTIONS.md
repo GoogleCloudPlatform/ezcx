@@ -70,6 +70,6 @@ func CxHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 }
 ```
 
-3. The full solution.  While `ezcx` is modular, it's really designed to serve as the full solution.  In particular, `ezcx` provides structures for the developer to create a server that's wired up to support the entire `ezcx` ecosystem.  
+3. The full solution.  While `ezcx` is modular, it's really designed to serve as the full solution.  In particular, `ezcx` provides structures for the developer to create a server that's wired up to support the entire `ezcx` ecosystem.   
 
 ## [Actually] getting started with ezcx
