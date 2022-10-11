@@ -120,6 +120,7 @@ func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 		return nil, err
 	}
 	unmarshaler := &protojson.UnmarshalOptions{
+		AllowPartial:   true,
 		DiscardUnknown: true,
 	}
 	err = unmarshaler.Unmarshal(b, &req.WebhookRequest)
@@ -145,6 +146,7 @@ func (req *WebhookRequest) ReadReader(rd io.Reader) error {
 		return err
 	}
 	unmarshaler := &protojson.UnmarshalOptions{
+		AllowPartial:   true,
 		DiscardUnknown: true,
 	}
 	err = unmarshaler.Unmarshal(b, &req.WebhookRequest)
