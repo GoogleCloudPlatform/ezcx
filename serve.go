@@ -56,17 +56,23 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	req, err := WebhookRequestFromRequest(r)
 	if err != nil {
+		log.Println("Error during WebhookRequestFromRequest")
 		log.Println(err)
 		return
 	}
-	req.ctx = r.Context
+	req.ctx = r.Context // flowing down the requests's Context.
 	res := req.InitializeResponse()
-	err = h.Handle(res, req)
+	err = h(res, req)
 	if err != nil {
+		log.Println("Error during HandlerFunc execution")
 		log.Println(err)
 		return
 	}
-	res.WriteResponse(w)
+	err = res.WriteResponse(w)
+	if err != nil {
+		log.Println("Error during WebhookResponse.WriteResponse")
+		return
+	}
 }
 
 type Server struct {
@@ -81,7 +87,6 @@ type Server struct {
 func NewServer(ctx context.Context, addr string, lg *log.Logger, signals ...os.Signal) *Server {
 	return new(Server).Init(ctx, addr, lg, signals...)
 }
-
 
 func (s *Server) Init(ctx context.Context, addr string, lg *log.Logger, signals ...os.Signal) *Server {
 	if len(signals) == 0 {
