@@ -54,6 +54,9 @@ func (h HandlerFunc) Handle(res *WebhookResponse, req *WebhookRequest) error {
 // via WebhookRequestFromRequest (requests.go)
 func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
 	req, err := WebhookRequestFromRequest(r)
 	if err != nil {
 		log.Println("Error during WebhookRequestFromRequest")
@@ -85,6 +88,7 @@ type Server struct {
 }
 
 func NewServer(ctx context.Context, addr string, lg *log.Logger, signals ...os.Signal) *Server {
+	ctx = context.WithValue(ctx, Logger, lg)
 	return new(Server).Init(ctx, addr, lg, signals...)
 }
 

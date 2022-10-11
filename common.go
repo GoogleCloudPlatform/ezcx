@@ -14,8 +14,17 @@
 
 package ezcx
 
-import "google.golang.org/protobuf/types/known/structpb"
+import (
+	"fmt"
 
+	"google.golang.org/protobuf/types/known/structpb"
+)
+
+type contextKey int
+
+const (
+	Logger contextKey = iota
+)
 
 func anyToProto(value any) (*structpb.Value, error) {
 	return structpb.NewValue(value)
@@ -44,4 +53,8 @@ func protoToAnyMap(pm map[string]*structpb.Value) map[string]any {
 		m[k] = v
 	}
 	return m
+}
+
+func ErrUnmarshalWrapper(site string, err error) error {
+	return fmt.Errorf("UNMARSHALLING ERROR | call site: %s, error: %w", site, err)
 }

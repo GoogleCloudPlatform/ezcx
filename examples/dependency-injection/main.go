@@ -55,6 +55,9 @@ func NewDependencies() *Dependencies {
 // Structural approach.
 func (d *Dependencies) cxConfirm(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 	params := req.GetSessionParameters()
+	if params == nil {
+		// Handle empty params.
+	}
 
 	size := params["size"]
 	color := params["color"]

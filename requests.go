@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -70,6 +71,21 @@ func (req *WebhookRequest) initPayload() {
 
 func (req *WebhookRequest) Context() context.Context {
 	return req.ctx()
+}
+
+func (req *WebhookRequest) Logger() *log.Logger {
+	ctx := req.Context()
+	ctxLg := ctx.Value(Logger)
+	if ctxLg == nil {
+		// During testing, it's possible the user defined logger was not
+		// flowed down.  This is provided for convenience.
+		return log.Default()
+	}
+	lg, ok := ctxLg.(*log.Logger)
+	if !ok {
+		return log.Default()
+	}
+	return lg
 }
 
 // Sets (overrides) the PageInfo.ParameterInfos to match the provided map m
@@ -125,7 +141,7 @@ func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 	}
 	err = unmarshaler.Unmarshal(b, &req.WebhookRequest)
 	if err != nil {
-		return nil, err
+		return nil, ErrUnmarshalWrapper("WebhookRequestFromReader", err)
 	}
 	return &req, nil
 }
