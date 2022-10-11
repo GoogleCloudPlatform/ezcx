@@ -34,7 +34,7 @@ func main() {
 	server.ListenAndServe(parent)
 }
 
-// Sends a joke upon invocation.
+// Sends a joke upon invocation.. 
 func CxJokeHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 	lg := req.Logger()   // Access the logger via req.Logger (it's passed as a context value)
 	ctx := req.Context() // Access the context, which is a proxy for (*http.Request).Context
