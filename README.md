@@ -3,7 +3,7 @@
 
 `ezcx` was designed to remove most (if not all) the complexity associated with building Dialogflow CX webhook fulfillment APIs:
 
-- `ezcx` is a convenience wrapper on top of Google Cloud's code-generated gRPC definitions.  `ezcx` exposes wrappers around the WebhookResponse, WebhookRequest, and subsequent protobuf messages used in defining the WebhookRequest and WebhookResponse.
+- `ezcx` is a convenience wrapper on top of Google Cloud's code-generated gRPC definitions and exposes wrappers around the WebhookResponse, WebhookRequest, and subsequent protobuf messages used in defining the WebhookRequest and WebhookResponse.
 
 - `ezcx` makes it easy to add WebhookResponse response messages.  The WebhookResponse object has a number of helper methods like `AddTextResponse`, `AddOutputAudioTextResponse` and `AddSessionParameters` that circumvent the need to manage sub-object allocation (forgot to make that map?  PANIC!), programming labor, and the absolute headache of keeping track of deeply nested objects.  
 
