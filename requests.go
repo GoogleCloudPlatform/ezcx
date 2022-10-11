@@ -110,13 +110,19 @@ func (req *WebhookRequest) setPayload(m map[string]any) error {
 	return nil
 }
 
+// yaquino@2022-10-11: Dialogflow CX API May include "extra" fields that may
+// throw errors and interface with protojson.Unmarshal.  As per the documentation,
+// these fields may be ignored.
 func WebhookRequestFromReader(rd io.Reader) (*WebhookRequest, error) {
 	var req WebhookRequest
 	b, err := io.ReadAll(rd)
 	if err != nil {
 		return nil, err
 	}
-	err = protojson.Unmarshal(b, &req)
+	unmarshaler := &protojson.UnmarshalOptions{
+		DiscardUnknown: true,
+	}
+	err = unmarshaler.Unmarshal(b, &req)
 	if err != nil {
 		return nil, err
 	}
