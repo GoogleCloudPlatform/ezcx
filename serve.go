@@ -60,7 +60,7 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	req.ctx = r.Context // flowing down the requests's Context.
+	req.ctx = r.Context // flowing down the requests's Context added.
 	res := req.InitializeResponse()
 	err = h(res, req)
 	if err != nil {
