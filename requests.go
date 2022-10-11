@@ -28,7 +28,7 @@ import (
 
 type WebhookRequest struct {
 	cx.WebhookRequest
-	// 2022-10-08: Replaced context.Context with func () context.Context
+	// 2022-10-08: Replaced context.Context with func () context.Context.
 	ctx func() context.Context
 }
 
