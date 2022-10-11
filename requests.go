@@ -15,6 +15,7 @@
 package ezcx
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net/http"
@@ -146,6 +147,20 @@ func (req *WebhookRequest) ReadReader(rd io.Reader) error {
 
 func (req *WebhookRequest) ReadRequest(r *http.Request) error {
 	return req.ReadReader(r.Body)
+}
+
+func (req *WebhookRequest) WriteRequest(w io.Writer) error {
+	m := protojson.MarshalOptions{Indent: "\t"}
+	b, err := m.Marshal(req)
+	if err != nil {
+		return err
+	}
+	r := bytes.NewReader(b)
+	_, err = io.Copy(w, r)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (req *WebhookRequest) InitializeResponse() *WebhookResponse {
