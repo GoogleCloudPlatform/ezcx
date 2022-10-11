@@ -44,6 +44,7 @@ func CxJokeHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 		lg.Println(err)
 		return err
 	}
+	lg.Println(joke.Joke) // added for testing purposes!
 	res.AddTextResponse(joke.Joke)
 	return nil
 }

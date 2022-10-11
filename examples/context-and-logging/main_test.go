@@ -14,8 +14,49 @@
 
 package main
 
-import "testing"
+import (
+	"bytes"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
 
+	"github.com/yaq-cc/ezcx"
+)
+
+// Unit (logical) testing for CxJokeHandler
 func TestCxJokeHandler(t *testing.T) {
-	CxJokeHandler
+	req, err := ezcx.NewTestingWebhookRequest(nil, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res := req.InitializeResponse()
+	err = CxJokeHandler(res, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.WriteResponse(os.Stdout)
+}
+
+// Unit (HTTP) testing for CxJokeHandler
+func TestServeHTTPJokeHandler(t *testing.T) {
+	var buf bytes.Buffer
+	req, err := ezcx.NewTestingWebhookRequest(nil, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = req.WriteRequest(&buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	httpReq := httptest.NewRequest(http.MethodPost, "/tell-a-joke", &buf)
+	w := httptest.NewRecorder()
+	hf := ezcx.HandlerFunc(CxJokeHandler)
+	hf.ServeHTTP(w, httpReq)
+	res := w.Result()
+	_, err = io.Copy(os.Stdout, res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
