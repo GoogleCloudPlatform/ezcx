@@ -33,29 +33,19 @@ var (
 	}
 )
 
-//Handler interface: Defines the contract.
-type Handler interface {
-	http.Handler
-	Handle(res *WebhookResponse, req *WebhookRequest) error
-}
-
-// Functional Adapter: HandlerFunc is an adapter.
-// HandlerFunc satisfies the Handler interface
+// HandlerFunc is an adapter that converts a given ezcx.HandlerFunc into an http.Handler.
 type HandlerFunc func(*WebhookResponse, *WebhookRequest) error
 
-// Seems  redundant; may serve a purpose, though, for structural handlers.
-// (ie Need to implement for functional handler to satisfy Handle which would
-// require implementation for structural handlers.)
-func (h HandlerFunc) Handle(res *WebhookResponse, req *WebhookRequest) error {
-	return h(res, req)
-}
-
-// yaquino@2022-10-07: http.Request's context is flowd down to the WebhookRequest
-// via WebhookRequestFromRequest (requests.go)
+// Implementing ServeHTTP allows the ezcx.HandlerFunc to satisfy the http.Handler interface.
+//
+// Error handling is an area of future improvement.  For instance, if a required parameter
+// is missing, it should be up to the developer to handle that i.e.: return an HTTP error (400, 500)
+// or return a ResponseMessage indicating something went wrong...
 func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 	req, err := WebhookRequestFromRequest(r)
 	if err != nil {
@@ -118,6 +108,7 @@ func (s *Server) Init(ctx context.Context, addr string, lg *log.Logger, signals 
 	return s
 }
 
+// SetHandler allows the user to set a custom mux or handler.
 func (s *Server) SetHandler(h http.Handler) {
 	s.server.Handler = h
 	if s.isMux(h) {
@@ -127,6 +118,7 @@ func (s *Server) SetHandler(h http.Handler) {
 	}
 }
 
+// ServeMux returns a copy of the currently set mux.
 func (s *Server) ServeMux() *http.ServeMux {
 	return s.mux
 }
@@ -136,11 +128,16 @@ func (s *Server) isMux(h http.Handler) bool {
 	return ok
 }
 
+// HandleCx registers the handler for the given pattern.  While the HandleCx method itself
+// isn't safe for concurrent usage, the underlying method it wraps (*ServeMux).Handle IS guarded
+// by a mutex.
 func (s *Server) HandleCx(pattern string, handler HandlerFunc) {
 	s.mux.Handle(pattern, handler)
 }
 
-// yaquino@2022-09-21: I have concerns that checking the parent context will not work as desired.
+// ListenAndServe listens on the TCP network address srv.Addr and then calls Serve
+// to handle requests on incoming connections. ListenAndServe is responsible for handling signals
+// and managing graceful shutdown(s) whenever the right signals are intercepted.
 func (s *Server) ListenAndServe(ctx context.Context) {
 	defer func() {
 		close(s.errs)
@@ -202,6 +199,7 @@ func (s *Server) Reconfigure() error {
 	return nil
 }
 
+// Shutdown provides graceful shutdown for the entire ezcx Server
 func (s *Server) Shutdown(ctx context.Context) error {
 	timeout, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()

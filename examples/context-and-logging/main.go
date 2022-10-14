@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -46,5 +47,24 @@ func CxJokeHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 	}
 	lg.Println(joke.Joke) // added for testing purposes!
 	res.AddTextResponse(joke.Joke)
+	return nil
+}
+
+func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
+	params := req.GetSessionParameters()
+	color, ok := params["color"]
+	if !ok {
+		res.AddTextResponse("I couldn't find the provided color.")
+		return fmt.Errorf("missing session parameter: color")
+	}
+	// add a parameter
+	params["color-processed"] = true
+	// delete a parameter
+	delete(params, "color")
+	err := res.SetSessionParameters(params)
+	if err != nil {
+		return err
+	}
+	res.AddTextResponse(fmt.Sprintf("The provided color was %s", color))
 	return nil
 }
