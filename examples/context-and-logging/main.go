@@ -59,7 +59,7 @@ func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) er
 	}
 	// add a parameter
 	params["color-processed"] = true
-	// delete a parameter
+	// delete a parameter ~
 	delete(params, "color")
 	err := res.SetSessionParameters(params)
 	if err != nil {
