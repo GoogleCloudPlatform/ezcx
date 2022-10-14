@@ -14,10 +14,10 @@ type WebhookRequest struct {
 
 By using the facade pattern, `ezcx` fills the *ease-of-use gap* that is ubiquituously absent with code generated client libraries.  Ease-of-use is defined as:
 
-1. Manual allocation, initialization, and nil-checks: The Dialogflow CX v3 and v3beta1 APIs consistently deal with nested objects. Structural allocations are a major source of developmental setbacks, are often hard to keep track of, and can lead to insiduous bugs.  Furthermore, nil checks, manual allocations, and initializations can be exceedingly verbose - so much so they can actually hinder readability.  `ezcx` aims to take care of this for the developer. 
+1. __Manual allocation, initialization, and nil-checks__: The Dialogflow CX v3 and v3beta1 APIs consistently deal with nested objects. Structural allocations are a major source of developmental setbacks, are often hard to keep track of, and can lead to insiduous bugs.  Furthermore, nil checks, manual allocations, and initializations can be exceedingly verbose - so much so they can actually hinder readability.  `ezcx` aims to take care of this for the developer. 
 
 ```go
-// AddTextResponses is a good example of why ezcx makes sense.  Imagine having to re-write all this boiler plate every time you have a new virtual agent project..!
+// AddTextResponses is a good example of why ezcx makes sense.  /// Imagine having to re-write all this boiler plate for each new virtual agent project..!
 
 func (res *WebhookResponse) AddTextResponse(txts ...string) {
 	// Check to see if objects exist else initialize.
@@ -40,7 +40,7 @@ func (res *WebhookResponse) AddTextResponse(txts ...string) {
 }
 ```
 
-2. Working with the standard library.  When undertaking a proper Dialogflow CX Webhook Fulfillment API project, if the developer chooses to use the Dialogflow CX Cloud Client library, they may need to undergo a rather lengthy journey to properly explore the ecosystem of extended tooling for interoperating with protobuf messages.  `ezcx` removes the need to interact directly with protobuf structures, marshalling, and unmarshalling - and reduces those interactions to standard Go libraries, data structures, and paradigms.  
+2. __Working with the standard library__:  When undertaking a proper Dialogflow CX Webhook Fulfillment API project, if the developer chooses to use the Dialogflow CX Cloud Client library, they may need to undergo a rather lengthy journey to properly explore the ecosystem of extended tooling for interoperating with protobuf messages.  `ezcx` removes the need to interact directly with protobuf structures, marshalling, and unmarshalling - and reduces those interactions to standard Go libraries, data structures, and paradigms.  
 
 ```go
 // Note the complete and utter absence of libraries like structpb, protojson, and other gRPC specific libraries.  
@@ -70,7 +70,7 @@ func CxHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 }
 ```
 
-3. The full solution.  While `ezcx` is modular, it's really designed to serve as a one stop shop for publishing Webhook Fulfillment APIs.  In particular, `ezcx` provides structures for creating an HTTP server that's wired up to support the entire `ezcx` ecosystem.   `ezcx` provides a special type, the `ezcx.HandlerFunc`, that adapts between Webhook handler functions and HTTP handler functions:
+3. __The full solution__: `ezcx`serves as a one stop shop for publishing Webhook Fulfillment APIs.  `ezcx` provides structures for creating an HTTP server that's wired up to support the entire `ezcx` ecosystem.   `ezcx` provides a special type, the `ezcx.HandlerFunc`, that adapts between Webhook handler functions and HTTP handler functions:
 
 ```go
 // http.HandlerFunc
@@ -86,7 +86,7 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 ``` 
 
-In the spirit of providing the full solution, `ezcx` introduces it's own server, the `ezcx.Server` which is just a pre-packaged `http.Server` instance that comes pre-integrated with a variety of useful features:
+`ezcx` introduces it's own server, the `ezcx.Server` which is just a `http.Server` instance that comes integrated with a variety of useful features:
 
 1. `ezcx.Server` is signals aware and will initiate a properly contexted graceful shutdown upon receiving a SIGINT (interrupt)  or SIGTERM (terminate) signal.  Eventually, `ezcx.Server` may support hot-reconfiguration via the SIGHUP (hang up) signal.  
 
@@ -100,7 +100,7 @@ func CxHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
 }
 ```
 
-3. The `ezcx.Server` is designed to accept functions that follow `ezcx.HandlerFunc`'s method signature: `(WebhookResponse, WebhookRequest) error` instead of http.HandlerFuncs.  The server adapts the `ezcx.HandlerFunc`s into http.Handlers for the developer. `ezcx.Server` uses a default mux - eventually, the goal would be to support custom routers.  You can provide `ezcx.HandlerFunc`s via the server's HandleCx method:
+3. The `ezcx.Server` accepts functions that follow `ezcx.HandlerFunc`'s method signature: `(WebhookResponse, WebhookRequest) error` instead of http.HandlerFuncs.  The server adapts the `ezcx.HandlerFunc`s into http.Handlers for the developer. `ezcx.Server` uses a default mux - eventually, the goal would be to support custom routers.  You can provide `ezcx.HandlerFunc`s via the server's HandleCx method:
 
 ```go
 package main
@@ -132,7 +132,7 @@ func main() {
 
 ## [Actually] getting started with ezcx
 ### Writing Webhook handlers
-`ezcx` let's you focus on codifying business logic.  For instance, if you just need to send back a text response, use the (*WebhookResponse).AddTextResponse method.  
+`ezcx` let's you focus on codifying business logic.  If you just need to send back a text response, use the (*WebhookResponse).AddTextResponse method.  
 
 ```go
 func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
@@ -151,9 +151,9 @@ func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) er
 }
 ```
 
-You can, in fact, add multiple output ResponseMessages to the same WebhookResponse - but you need to be cautious and aware of some of the major caveats in doing so.
+You can add multiple output ResponseMessages to the same WebhookResponse - but you need to be aware of the major caveats in doing so.
 
-In some cases such as Text and OutputAudioText, if you do provide "multiple" response types to support a multi-channel agent, you need to make sure that fulfillments in the console are configured with those response types as well.  
+In some cases such as Text and OutputAudioText, if you provide "multiple" response types to support a multi-channel agent, you need to make sure that non-Webhook fulfillments in the console are configured with those response types as well.  
 
 To read more about why this is important, please see the Dialogflow CX API documentation for the [ResponseMessage message/object](https://cloud.google.com/dialogflow/cx/docs/reference/rest/v3/Fulfillment#ResponseMessage).  
 
@@ -166,9 +166,9 @@ To read more about why this is important, please see the Dialogflow CX API docum
 > 
 > *This approach allows for more sophisticated user experience scenarios, where the text displayed to the user may differ from what is heard.*
 
-Sometimes you don't need to return a fulfillment and instead just add a parameter.  You can use AddSessionParameter / AddSessionParameters or SetSessionParameters to do exactly that.
+Sometimes you don't need to return a fulfillment and instead just add a parameter.  You can use AddSessionParameter / `AddSessionParameters` or `SetSessionParameters` to do exactly that.
 
-AddSessionParameters will iterate over the existing session Parameters, updating or adding as necessary whereas SetSessionParameters will set the SessionParameters to the map you provide, overwriting the existing Session parameters.  
+`AddSessionParameters` will iterate over the existing session Parameters, updating or adding as necessary whereas `SetSessionParameters` will set the SessionParameters to the map you provide, overwriting the existing Session parameters.  
 
 The Add / Set parameter process may return an error depending on what gets provided - always check for errors!
 
@@ -185,7 +185,7 @@ func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) er
 }
 ```
 
-Webhook based fulfillment is all about interacting with Dialogflow WebhookRequest provided parameters.  In the previous example we Added / Set session parameters - but what if we need to extract parameters from a given session?  That's what (*WebhookRequest).GetSessionParameters is for!
+Webhook based fulfillment is all about interacting with Dialogflow WebhookRequest provided parameters.  In the previous example we Added / Set session parameters - but what if we need to extract parameters from a given session?  That's what `(*WebhookRequest).GetSessionParameters` is for!
 
 ```go
 func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) error {
@@ -210,8 +210,6 @@ func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) er
 ```
 
 The importance of error handling and existence checking can't be overstated.  While it does increase verbosity, it comes with the added benefit of understanding what went wrong.  
-
-
 
 ### WebhookRequest and WebhookResponse helper methods
 
