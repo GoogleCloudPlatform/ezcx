@@ -209,7 +209,7 @@ func CxHelloWorldHandler(res *ezcx.WebhookResponse, req *ezcx.WebhookRequest) er
 }
 ```
 
-The importance of error handling and existence checking can't be overstated.  While it does increase verbosity, it comes with the added benefit of understanding what went wrong.  
+The importance of error handling and existence checking can't be overstated.  While it does increase verbosity, it comes with the added benefit of understanding what went wrong.   
 
 ### WebhookRequest and WebhookResponse helper methods
 
