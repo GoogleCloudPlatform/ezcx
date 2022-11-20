@@ -65,7 +65,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/yaq-cc/ezcx"
+	"github.com/GoogleCloudPlatform/ezcx"
 )
 
 func main() {

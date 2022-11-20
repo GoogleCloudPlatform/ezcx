@@ -1,4 +1,4 @@
-module github.com/yaq-cc/ezcx
+module github.com/GoogleCloudPlatform/ezcx
 
 go 1.18
 
