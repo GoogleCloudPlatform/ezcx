@@ -1,8 +1,8 @@
-module github.com/yaq-cc/ezcx/examples/hussains-hedgetrimmer
+module github.com/GoogleCloudPlatform/ezcx/examples/hussains-hedgetrimmer
 
 go 1.18
 
-require github.com/yaq-cc/ezcx v0.0.0-20221010191455-28e404b2db1b
+require github.com/GoogleCloudPlatform/ezcx v0.0.0-20221010191455-28e404b2db1b
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect

@@ -1,8 +1,8 @@
-module github.com/yaq-cc/ezcx/examples/context-and-logging
+module github.com/GoogleCloudPlatform/ezcx/examples/context-and-logging
 
 go 1.18
 
-require github.com/yaq-cc/ezcx v0.0.0-20221011182622-d2c4996c95f1
+require github.com/GoogleCloudPlatform/ezcx v0.0.0-20221011182622-d2c4996c95f1
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect

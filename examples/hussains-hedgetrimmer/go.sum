@@ -5,8 +5,8 @@ github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.6 h1:BKbKCqvP6I+rmFHt06ZmyQtvB8xAkWdhFyr0ZUNZcxQ=
 github.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=
 github.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/yaq-cc/ezcx v0.0.0-20221010191455-28e404b2db1b h1:7T3CbLrUFh998VKQS5bupPpAh3WMGd9EHg3gmIEcOqI=
-github.com/yaq-cc/ezcx v0.0.0-20221010191455-28e404b2db1b/go.mod h1:DQn+C190bhiJpWuPKqFCGCFGBRJy0xtIcRnfId1vpG8=
+github.com/GoogleCloudPlatform/ezcx v0.0.0-20221010191455-28e404b2db1b h1:7T3CbLrUFh998VKQS5bupPpAh3WMGd9EHg3gmIEcOqI=
+github.com/GoogleCloudPlatform/ezcx v0.0.0-20221010191455-28e404b2db1b/go.mod h1:DQn+C190bhiJpWuPKqFCGCFGBRJy0xtIcRnfId1vpG8=
 golang.org/x/net v0.0.0-20221004154528-8021a29435af h1:wv66FM3rLZGPdxpYL+ApnDe2HzHcTFta3z5nsc13wI4=
 golang.org/x/net v0.0.0-20221004154528-8021a29435af/go.mod h1:YDH+HFinaLZZlnHAfSS6ZXJJ9M9t4Dl22yv3iI2vPwk=
 golang.org/x/sys v0.0.0-20221010170243-090e33056c14 h1:k5II8e6QD8mITdi+okbbmR/cIyEbeXLBhy5Ha4nevyc=

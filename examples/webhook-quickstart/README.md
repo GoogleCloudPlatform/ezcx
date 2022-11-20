@@ -12,7 +12,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/yaq-cc/ezcx"
+	"github.com/GoogleCloudPlatform/ezcx"
 )
 
 var (

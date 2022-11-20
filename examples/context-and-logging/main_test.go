@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/yaq-cc/ezcx"
+	"github.com/GoogleCloudPlatform/ezcx"
 )
 
 // Unit (logical) testing for CxJokeHandler
