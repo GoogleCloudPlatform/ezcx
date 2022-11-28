@@ -1,0 +1,46 @@
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+- id: docker-build-push-ezcx-service
+  waitFor: ['-']
+  name: gcr.io/cloud-builders/docker
+  dir: service
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      docker build -t gcr.io/$PROJECT_ID/${_SERVICE} . &&
+      docker push gcr.io/$PROJECT_ID/${_SERVICE}
+
+- id: gcloud-run-deploy-ezcx-service
+  waitFor: ['docker-build-push-ezcx-service']
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      gcloud run deploy ${_SERVICE} \
+        --project $PROJECT_ID \
+        --image gcr.io/$PROJECT_ID/${_SERVICE} \
+        --timeout 5m \
+        --region ${_REGION} \
+        --no-cpu-throttling \
+        --min-instances 0 \
+        --max-instances 3 \
+        --allow-unauthenticated
+
+substitutions:
+  _SERVICE: ezcx-service
+  _REGION: us-central-1
