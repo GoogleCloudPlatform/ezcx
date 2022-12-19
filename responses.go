@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"io"
 
-	cx "google.golang.org/genproto/googleapis/cloud/dialogflow/cx/v3"
+	cx "cloud.google.com/go/dialogflow/cx/apiv3/cxpb"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
 )

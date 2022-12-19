@@ -195,6 +195,63 @@ func (s *Server) ListenAndServe(ctx context.Context) {
 	}
 }
 
+func (s *Server) ListenAndServeTLS(ctx context.Context, certFile, keyFile string) {
+	defer func() {
+		close(s.errs)
+		close(s.signal)
+	}()
+	// Run ListenAndServe on a separate goroutine.
+	s.lg.Printf("EZCX server listening and serving on %s\n", s.server.Addr)
+	go func() {
+		err := s.server.ListenAndServeTLS(certFile, keyFile)
+		if err != nil && err != http.ErrServerClosed {
+			s.lg.Println(err)
+			s.errs <- err
+			close(s.errs)
+		}
+	}()
+
+	for {
+		select {
+		// If the context is done, we need to return.
+		case <-ctx.Done():
+			s.lg.Println("EZCX server context is done")
+			err := ctx.Err()
+			if err != nil {
+				s.lg.Print("EZCX server context error...")
+				s.lg.Println(err)
+			}
+			return
+		// If there's a non-nil error, we need to return
+		case err := <-s.errs:
+			if err != nil {
+				s.lg.Print("EZCX server non-nil error...")
+				s.lg.Println(err)
+				return
+			}
+		case sig := <-s.signal:
+			s.lg.Printf("EZCX server signal %s received...", sig)
+			switch sig {
+			case syscall.SIGHUP:
+				s.lg.Println("EZCX reconfigure", sig)
+				err := s.Reconfigure()
+				if err != nil {
+					s.errs <- err
+				}
+			default:
+				s.lg.Printf("EZCX graceful shutdown initiated...")
+				err := s.Shutdown(ctx)
+				if err != nil {
+					s.lg.Println(err)
+				} else {
+					s.lg.Println("EZCX shutdown SUCCESS")
+				}
+				return
+			}
+		}
+	}
+}
+
 // Omitted for now.
 func (s *Server) Reconfigure() error {
 	return nil

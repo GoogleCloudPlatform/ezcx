@@ -21,10 +21,19 @@ import (
 	"log"
 	"net/http"
 
+	cx "cloud.google.com/go/dialogflow/cx/apiv3/cxpb"
 	"github.com/google/uuid"
-	cx "google.golang.org/genproto/googleapis/cloud/dialogflow/cx/v3"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
+)
+
+// 2022-11-28
+type CxParameterType int
+
+const (
+	String CxParameterType = iota
+	Integer
+	Float
 )
 
 type WebhookRequest struct {
