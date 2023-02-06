@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -68,6 +69,10 @@ func (h HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func DefaultHealthCheck(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
 type Server struct {
 	signals []os.Signal
 	signal  chan os.Signal
@@ -75,6 +80,7 @@ type Server struct {
 	server  *http.Server
 	mux     *http.ServeMux
 	lg      *log.Logger
+	hc      http.HandlerFunc
 }
 
 func NewServer(ctx context.Context, addr string, lg *log.Logger, signals ...os.Signal) *Server {
@@ -100,11 +106,14 @@ func (s *Server) Init(ctx context.Context, addr string, lg *log.Logger, signals 
 
 	s.errs = make(chan error)
 	s.mux = http.NewServeMux()
+	s.hc = DefaultHealthCheck
+	s.mux.HandleFunc("/health", s.hc)
 	s.server = &http.Server{
 		Addr:        addr,
 		Handler:     s.mux,
 		BaseContext: func(l net.Listener) context.Context { return ctx },
 	}
+
 	return s
 }
 
@@ -118,7 +127,7 @@ func (s *Server) SetHandler(h http.Handler) {
 	}
 }
 
-// ServeMux returns a copy of the currently set mux.
+// ServeMux returns a pointer to the currently set mux.
 func (s *Server) ServeMux() *http.ServeMux {
 	return s.mux
 }
@@ -128,10 +137,26 @@ func (s *Server) isMux(h http.Handler) bool {
 	return ok
 }
 
+var (
+	reservedPaths = map[string]struct{}{
+		"admin":  {},
+		"health": {},
+	}
+)
+
 // HandleCx registers the handler for the given pattern.  While the HandleCx method itself
 // isn't safe for concurrent usage, the underlying method it wraps (*ServeMux).Handle IS guarded
 // by a mutex.
 func (s *Server) HandleCx(pattern string, handler HandlerFunc) {
+	pathParts := strings.Split(pattern, "/")
+	if len(pathParts) >= 2 {
+		pathPrefix := pathParts[1]
+		_, ok := reservedPaths[pathPrefix]
+		if ok {
+			s.lg.Fatal("admin, health are reserved path prefixes")
+		}
+	}
+
 	s.mux.Handle(pattern, handler)
 }
 

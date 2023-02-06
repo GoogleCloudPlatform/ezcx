@@ -40,6 +40,7 @@ type WebhookRequest struct {
 	cx.WebhookRequest
 	// 2022-10-08: Replaced context.Context with func () context.Context.
 	ctx func() context.Context
+	req *http.Request
 }
 
 func NewWebhookRequest() *WebhookRequest {
@@ -76,6 +77,12 @@ func (req *WebhookRequest) initPayload() {
 	if req.Payload.Fields == nil {
 		req.Payload.Fields = make(map[string]*structpb.Value)
 	}
+}
+
+// Returns a pointer to the underlying http.Request. 
+// Useful for providing extended logging.
+func (req *WebhookRequest) Request() *http.Request {
+	return req.req
 }
 
 func (req *WebhookRequest) Context() context.Context {
@@ -163,6 +170,7 @@ func WebhookRequestFromRequest(r *http.Request) (*WebhookRequest, error) {
 	if err != nil {
 		return nil, err
 	}
+	req.req = r
 	return req, nil
 }
 
