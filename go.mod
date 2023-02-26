@@ -1,6 +1,6 @@
-module github.com/googlecloudplatform/ezcx
+module github.com/GoogleCloudPlatform/ezcx
 
-go 1.18
+go 1.20
 
 require (
 	cloud.google.com/go/dialogflow v1.19.0
